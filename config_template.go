@@ -10,7 +10,7 @@ file=/tmp/supervisord.sock
 #chmod=not support
 #chown=not support
 username=test1
-password={SHA}82ab876d1387bfafe46cc1c8a2ef074eae50cb1d
+password=test1
 
 [inet_http_server]
 port=127.0.0.1:9001
