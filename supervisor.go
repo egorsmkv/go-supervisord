@@ -105,7 +105,7 @@ func (s *Supervisor) GetSupervisorID() string {
 }
 
 // Shutdown the supervisor
-func (s *Supervisor) Shutdown(r *http.Request, args *struct{}, reply *struct{ Ret bool }) error {
+func (s *Supervisor) Shutdown(_ *http.Request, _ *struct{}, reply *struct{ Ret bool }) {
 	reply.Ret = true
 	log.Info("received rpc request to stop all processes & exit")
 	s.procMgr.StopAllProcesses()
@@ -113,7 +113,6 @@ func (s *Supervisor) Shutdown(r *http.Request, args *struct{}, reply *struct{ Re
 		time.Sleep(1 * time.Second)
 		os.Exit(0)
 	}()
-	return nil
 }
 
 // IsRestarting check if supervisor is in restarting state
@@ -141,21 +140,20 @@ func getProcessInfo(proc *process.Process) *types.ProcessInfo {
 }
 
 // GetAllProcessInfo get all the program information managed by supervisor
-func (s *Supervisor) GetAllProcessInfo(r *http.Request, args *struct{}, reply *struct{ AllProcessInfo []types.ProcessInfo }) error {
+func (s *Supervisor) GetAllProcessInfo(_ *http.Request, _ *struct{}, reply *struct{ AllProcessInfo []types.ProcessInfo }) {
 	reply.AllProcessInfo = make([]types.ProcessInfo, 0)
 	s.procMgr.ForEachProcess(func(proc *process.Process) {
 		procInfo := getProcessInfo(proc)
 		reply.AllProcessInfo = append(reply.AllProcessInfo, *procInfo)
 	})
 	types.SortProcessInfos(reply.AllProcessInfo)
-	return nil
 }
 
 // StartProcess start the given program
-func (s *Supervisor) StartProcess(r *http.Request, args *StartProcessArgs, reply *struct{ Success bool }) error {
+func (s *Supervisor) StartProcess(_ *http.Request, args *StartProcessArgs, reply *struct{ Success bool }) error {
 	procs := s.procMgr.FindMatch(args.Name)
 
-	if len(procs) <= 0 {
+	if len(procs) == 0 {
 		return fmt.Errorf("fail to find process %s", args.Name)
 	}
 	for _, proc := range procs {
@@ -166,10 +164,10 @@ func (s *Supervisor) StartProcess(r *http.Request, args *StartProcessArgs, reply
 }
 
 // StopProcess stop given program
-func (s *Supervisor) StopProcess(r *http.Request, args *StartProcessArgs, reply *struct{ Success bool }) error {
+func (s *Supervisor) StopProcess(_ *http.Request, args *StartProcessArgs, reply *struct{ Success bool }) error {
 	log.WithFields(log.Fields{"program": args.Name}).Info("stop process")
 	procs := s.procMgr.FindMatch(args.Name)
-	if len(procs) <= 0 {
+	if len(procs) == 0 {
 		return fmt.Errorf("fail to find process %s", args.Name)
 	}
 	for _, proc := range procs {
@@ -180,9 +178,10 @@ func (s *Supervisor) StopProcess(r *http.Request, args *StartProcessArgs, reply 
 }
 
 // Reload supervisord configuration.
-func (s *Supervisor) Reload(restart bool) (addedGroup []string, changedGroup []string, removedGroup []string, err error) {
+func (s *Supervisor) Reload(restart bool) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
 	// get the previous loaded programs
 	prevPrograms := s.config.GetProgramNames()
 	prevProgGroup := s.config.ProgramGroup.Clone()
@@ -190,10 +189,9 @@ func (s *Supervisor) Reload(restart bool) (addedGroup []string, changedGroup []s
 	loadedPrograms, err := s.config.Load()
 
 	if checkErr := s.checkRequiredResources(); checkErr != nil {
-		log.Error(checkErr)
-		os.Exit(1)
-
+		panic(checkErr)
 	}
+
 	if err == nil {
 		s.setSupervisordInfo()
 		s.startEventListeners()
@@ -211,10 +209,11 @@ func (s *Supervisor) Reload(restart bool) (addedGroup []string, changedGroup []s
 		if proc != nil {
 			proc.Stop(false)
 		}
-
 	}
-	addedGroup, changedGroup, removedGroup = s.config.ProgramGroup.Sub(prevProgGroup)
-	return addedGroup, changedGroup, removedGroup, err
+
+	s.config.ProgramGroup.Sub(prevProgGroup)
+
+	return err
 }
 
 // WaitForExit waits for supervisord to exit

@@ -22,6 +22,12 @@ func Daemonize(logfile string, proc func()) {
 	if child != nil {
 		return
 	}
-	defer context.Release()
+
+	defer func() {
+		if releaseErr := context.Release(); releaseErr != nil {
+			log.WithFields(log.Fields{"err": releaseErr}).Fatal("Context release error")
+		}
+	}()
+
 	proc()
 }

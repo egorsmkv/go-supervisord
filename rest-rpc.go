@@ -41,14 +41,12 @@ func (sr *SupervisorRestful) CreateSupervisorHandler() http.Handler {
 // ListProgram list the status of all the programs
 //
 // json array to present the status of all programs
-func (sr *SupervisorRestful) ListProgram(w http.ResponseWriter, req *http.Request) {
+func (sr *SupervisorRestful) ListProgram(w http.ResponseWriter, _ *http.Request) {
 	result := struct{ AllProcessInfo []types.ProcessInfo }{make([]types.ProcessInfo, 0)}
-	if sr.supervisor.GetAllProcessInfo(nil, nil, &result) == nil {
-		json.NewEncoder(w).Encode(result.AllProcessInfo)
-	} else {
-		r := map[string]bool{"success": false}
-		json.NewEncoder(w).Encode(r)
-	}
+
+	sr.supervisor.GetAllProcessInfo(nil, nil, &result)
+
+	_ = json.NewEncoder(w).Encode(result.AllProcessInfo)
 }
 
 // StartProgram start the given program through restful interface
@@ -57,7 +55,7 @@ func (sr *SupervisorRestful) StartProgram(w http.ResponseWriter, req *http.Reque
 	params := mux.Vars(req)
 	success, err := sr._startProgram(params["name"])
 	r := map[string]bool{"success": err == nil && success}
-	json.NewEncoder(w).Encode(&r)
+	_ = json.NewEncoder(w).Encode(&r)
 }
 
 func (sr *SupervisorRestful) _startProgram(program string) (bool, error) {
@@ -75,19 +73,28 @@ func (sr *SupervisorRestful) StartPrograms(w http.ResponseWriter, req *http.Requ
 
 	if b, err = io.ReadAll(req.Body); err != nil {
 		w.WriteHeader(400)
-		w.Write([]byte("not a valid request"))
+		_, _ = w.Write([]byte("not a valid request"))
 		return
 	}
 
 	var programs []string
 	if err = json.Unmarshal(b, &programs); err != nil {
 		w.WriteHeader(400)
-		w.Write([]byte("not a valid request"))
+		_, _ = w.Write([]byte("not a valid request"))
 	} else {
+		successStarts := 0
 		for _, program := range programs {
-			sr._startProgram(program)
+			success, err := sr._startProgram(program)
+			if success && err == nil {
+				successStarts++
+			}
 		}
-		w.Write([]byte("Success to start the programs"))
+
+		if successStarts != len(programs) {
+			_, _ = w.Write([]byte("Failed to start the programs"))
+		} else {
+			_, _ = w.Write([]byte("Success to start the programs"))
+		}
 	}
 }
 
@@ -98,7 +105,7 @@ func (sr *SupervisorRestful) StopProgram(w http.ResponseWriter, req *http.Reques
 	params := mux.Vars(req)
 	success, err := sr._stopProgram(params["name"])
 	r := map[string]bool{"success": err == nil && success}
-	json.NewEncoder(w).Encode(&r)
+	_ = json.NewEncoder(w).Encode(&r)
 }
 
 func (sr *SupervisorRestful) _stopProgram(programName string) (bool, error) {
@@ -117,23 +124,32 @@ func (sr *SupervisorRestful) StopPrograms(w http.ResponseWriter, req *http.Reque
 	var err error
 	if b, err = io.ReadAll(req.Body); err != nil {
 		w.WriteHeader(400)
-		w.Write([]byte("not a valid request"))
+		_, _ = w.Write([]byte("not a valid request"))
 		return
 	}
 
 	if err := json.Unmarshal(b, &programs); err != nil {
 		w.WriteHeader(400)
-		w.Write([]byte("not a valid request"))
+		_, _ = w.Write([]byte("not a valid request"))
 	} else {
+		successStops := 0
 		for _, program := range programs {
-			sr._stopProgram(program)
+			success, err := sr._stopProgram(program)
+			if success && err == nil {
+				successStops++
+			}
 		}
-		w.Write([]byte("Success to stop the programs"))
+
+		if successStops != len(programs) {
+			_, _ = w.Write([]byte("Failed to stop the programs"))
+		} else {
+			_, _ = w.Write([]byte("Success to stop the programs"))
+		}
 	}
 }
 
 // ReadStdoutLog read the stdout of given program
-func (sr *SupervisorRestful) ReadStdoutLog(w http.ResponseWriter, req *http.Request) {
+func (sr *SupervisorRestful) ReadStdoutLog(_ http.ResponseWriter, _ *http.Request) {
 }
 
 // Shutdown the supervisor itself
@@ -142,7 +158,7 @@ func (sr *SupervisorRestful) Shutdown(w http.ResponseWriter, req *http.Request) 
 
 	reply := struct{ Ret bool }{false}
 	sr.supervisor.Shutdown(nil, nil, &reply)
-	w.Write([]byte("Shutdown..."))
+	_, _ = w.Write([]byte("Shutdown..."))
 }
 
 // Reload the supervisor configuration file through rest interface
@@ -150,7 +166,13 @@ func (sr *SupervisorRestful) Reload(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	reply := struct{ Ret bool }{false}
-	sr.supervisor.Reload(false)
+	err := sr.supervisor.Reload(false)
+	if err != nil {
+		r := map[string]bool{"success": false}
+		_ = json.NewEncoder(w).Encode(&r)
+		return
+	}
+
 	r := map[string]bool{"success": reply.Ret}
-	json.NewEncoder(w).Encode(&r)
+	_ = json.NewEncoder(w).Encode(&r)
 }

@@ -26,22 +26,6 @@ type Options struct {
 	Daemon        bool   `short:"d" long:"daemon" description:"run as daemon"`
 }
 
-func init() {
-	nullLogger := logger.NewNullLogger(logger.NewNullLogEventEmitter())
-	log.SetOutput(nullLogger)
-	logFormat := os.Getenv("LOG_FORMAT")
-	if logFormat == "json" {
-		log.SetFormatter(&log.JSONFormatter{})
-	} else {
-		if runtime.GOOS == "windows" {
-			log.SetFormatter(&log.TextFormatter{DisableColors: true, FullTimestamp: true})
-		} else {
-			log.SetFormatter(&log.TextFormatter{DisableColors: false, FullTimestamp: true})
-		}
-	}
-	log.SetLevel(log.DebugLevel)
-}
-
 func initSignals(s *Supervisor) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -59,7 +43,7 @@ var (
 )
 
 func loadEnvFile() {
-	if len(options.EnvFile) <= 0 {
+	if options.EnvFile == "" {
 		return
 	}
 	// try to open the environment file
@@ -78,7 +62,7 @@ func loadEnvFile() {
 		}
 		// if line starts with '#', it is a comment line, ignore it
 		line = strings.TrimSpace(line)
-		if len(line) > 0 && line[0] == '#' {
+		if line != "" && line[0] == '#' {
 			continue
 		}
 		// if environment variable is exported with "export"
@@ -91,7 +75,7 @@ func loadEnvFile() {
 			k := strings.TrimSpace(line[0:pos])
 			v := strings.TrimSpace(line[pos+1:])
 			// if key and value are not empty, put it into the environment
-			if len(k) > 0 && len(v) > 0 {
+			if k != "" && v != "" {
 				os.Setenv(k, v)
 			}
 		}
@@ -134,12 +118,12 @@ func runServer() {
 	// infinite loop for handling Restart ('reload' command)
 	loadEnvFile()
 	for {
-		if len(options.Configuration) <= 0 {
+		if options.Configuration == "" {
 			options.Configuration, _ = findSupervisordConf()
 		}
 		s := NewSupervisor(options.Configuration)
 		initSignals(s)
-		if _, _, _, sErr := s.Reload(true); sErr != nil {
+		if sErr := s.Reload(true); sErr != nil {
 			panic(sErr)
 		}
 		s.WaitForExit()
@@ -166,6 +150,20 @@ func getSupervisordLogFile(configFile string) string {
 }
 
 func main() {
+	nullLogger := logger.NewNullLogger(logger.NewNullLogEventEmitter())
+	log.SetOutput(nullLogger)
+	logFormat := os.Getenv("LOG_FORMAT")
+	if logFormat == "json" {
+		log.SetFormatter(&log.JSONFormatter{})
+	} else {
+		if runtime.GOOS == "windows" {
+			log.SetFormatter(&log.TextFormatter{DisableColors: true, FullTimestamp: true})
+		} else {
+			log.SetFormatter(&log.TextFormatter{DisableColors: false, FullTimestamp: true})
+		}
+	}
+	log.SetLevel(log.DebugLevel)
+
 	ReapZombie()
 
 	// when execute `supervisord` without sub-command, it should start the server
@@ -182,6 +180,30 @@ func main() {
 			os.Exit(0)
 		}
 		return command.Execute(args)
+	}
+
+	if _, cmdErr := parser.AddCommand("version",
+		"show the version of supervisor",
+		"display the supervisor version",
+		&versionCommand); cmdErr != nil {
+		_, _ = fmt.Fprintln(os.Stdout, cmdErr)
+		os.Exit(0)
+	}
+
+	if _, cmdErr := parser.AddCommand("service",
+		"install/uninstall/start/stop service",
+		"install/uninstall/start/stop service",
+		&serviceCommand); cmdErr != nil {
+		_, _ = fmt.Fprintln(os.Stdout, cmdErr)
+		os.Exit(0)
+	}
+
+	if _, cmdErr := parser.AddCommand("init",
+		"initialize a template",
+		"The init subcommand writes the supported configurations to specified file",
+		&initTemplateCommand); cmdErr != nil {
+		_, _ = fmt.Fprintln(os.Stdout, cmdErr)
+		os.Exit(0)
 	}
 
 	if _, err := parser.Parse(); err != nil {

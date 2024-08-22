@@ -124,7 +124,7 @@ type InitTemplateCommand struct {
 var initTemplateCommand InitTemplateCommand
 
 // Execute execute the init command
-func (x *InitTemplateCommand) Execute(args []string) error {
+func (x *InitTemplateCommand) Execute(_ []string) error {
 	f, err := os.Create(x.OutFile)
 	if err != nil {
 		return err
@@ -139,11 +139,4 @@ func (x *InitTemplateCommand) Execute(args []string) error {
 func GenTemplate(writer io.Writer) error {
 	_, err := writer.Write([]byte(configTemplate))
 	return err
-}
-
-func init() {
-	parser.AddCommand("init",
-		"initialize a template",
-		"The init subcommand writes the supported configurations to specified file",
-		&initTemplateCommand)
 }

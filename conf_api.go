@@ -6,23 +6,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ConfApi struct {
+type ConfAPI struct {
 	router     *mux.Router
 	supervisor *Supervisor
 }
 
-// NewLogtail creates a Logtail object
-func NewConfApi(supervisor *Supervisor) *ConfApi {
-	return &ConfApi{router: mux.NewRouter(), supervisor: supervisor}
+// NewConfAPI creates a ConfAPI object
+func NewConfAPI(supervisor *Supervisor) *ConfAPI {
+	return &ConfAPI{router: mux.NewRouter(), supervisor: supervisor}
 }
 
 // CreateHandler creates http handlers to process the program stdout and stderr through http interface
-func (ca *ConfApi) CreateHandler() http.Handler {
+func (ca *ConfAPI) CreateHandler() http.Handler {
 	ca.router.HandleFunc("/conf/{program}", ca.getProgramConfFile).Methods("GET")
 	return ca.router
 }
 
-func (ca *ConfApi) getProgramConfFile(writer http.ResponseWriter, request *http.Request) {
+func (ca *ConfAPI) getProgramConfFile(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	if vars == nil {
 		writer.WriteHeader(http.StatusNotFound)
@@ -43,5 +43,5 @@ func (ca *ConfApi) getProgramConfFile(writer http.ResponseWriter, request *http.
 	}
 
 	writer.WriteHeader(http.StatusOK)
-	writer.Write(b)
+	_, _ = writer.Write(b)
 }

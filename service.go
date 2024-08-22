@@ -15,7 +15,7 @@ var serviceCommand ServiceCommand
 type program struct{}
 
 // Start supervised service
-func (p *program) Start(s service.Service) error {
+func (p *program) Start(_ service.Service) error {
 	go p.run()
 	return nil
 }
@@ -23,7 +23,7 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() {}
 
 // Stop supervised service
-func (p *program) Stop(s service.Service) error {
+func (p *program) Stop(_ service.Service) error {
 	// Stop should not block. Return with a few seconds.
 	return nil
 }
@@ -68,8 +68,14 @@ func (sc ServiceCommand) Execute(args []string) error {
 			fmt.Println("Succeed to install service go-supervisord")
 		}
 	case "uninstall":
-		s.Stop()
-		err := s.Uninstall()
+		err := s.Stop()
+		if err != nil {
+			log.Error("Failed to stop service go-supervisord: ", err)
+			fmt.Println("Failed to stop service go-supervisord: ", err)
+			return err
+		}
+
+		err = s.Uninstall()
 		if err != nil {
 			log.Error("Failed to uninstall service go-supervisord: ", err)
 			fmt.Println("Failed to uninstall service go-supervisord: ", err)
@@ -105,11 +111,4 @@ func (sc ServiceCommand) Execute(args []string) error {
 
 func showUsage() {
 	fmt.Println("usage: supervisord service install/uninstall/start/stop")
-}
-
-func init() {
-	parser.AddCommand("service",
-		"install/uninstall/start/stop service",
-		"install/uninstall/start/stop service",
-		&serviceCommand)
 }
