@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -110,17 +109,6 @@ func getProgramConfigPath(programName string, s *Supervisor) string {
 	return res
 }
 
-func readLogHTML(writer http.ResponseWriter, _ *http.Request) {
-	b, err := readFile("webgui/log.html")
-	if err != nil {
-		writer.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	writer.WriteHeader(http.StatusOK)
-	_, _ = writer.Write(b)
-}
-
 func (p *XMLRPC) startHTTPServer(user, password, protocol, listenAddr string, s *Supervisor, startedCb func()) {
 	if p.isHTTPServerStartedOnProtocol(protocol) {
 		startedCb()
@@ -137,26 +125,14 @@ func (p *XMLRPC) startHTTPServer(user, password, protocol, listenAddr string, s 
 	supervisorRestHandler := NewSupervisorRestful(s).CreateSupervisorHandler()
 	mux.Handle("/supervisor/", newHTTPBasicAuth(user, password, supervisorRestHandler))
 
-	// conf 文件
+	// Config file
 	confHandler := NewConfAPI(s).CreateHandler()
+
 	mux.Handle("/conf/", newHTTPBasicAuth(user, password, confHandler))
-	mux.HandleFunc("/confFile", func(writer http.ResponseWriter, _ *http.Request) {
-		b, err := readFile("webgui/conf.html")
-		if err != nil {
-			writer.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		writer.WriteHeader(http.StatusOK)
-		_, _ = writer.Write(b)
-	})
-
-	// 读log.html文件
-	mux.HandleFunc("/log", readLogHTML)
 
 	mux.Handle("/metrics", promhttp.Handler())
 
-	// 注册日志路由,可以查看日志目录
+	// Register log routing, you can view the log directory
 	entryList := s.config.GetPrograms()
 	for _, c := range entryList {
 		realName := c.GetProgramName()
@@ -168,8 +144,11 @@ func (p *XMLRPC) startHTTPServer(user, password, protocol, listenAddr string, s 
 		if filePath == "" {
 			continue
 		}
+
 		dir := filepath.Dir(filePath)
-		fmt.Println(dir)
+
+		log.Println(dir)
+
 		mux.Handle("/log/"+realName+"/", http.StripPrefix("/log/"+realName+"/", http.FileServer(http.Dir(dir))))
 	}
 
