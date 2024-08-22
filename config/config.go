@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -130,13 +129,14 @@ func (c *Config) Load() ([]string, error) {
 
 func (c *Config) getIncludeFiles(cfg *ini.Ini) []string {
 	result := make([]string, 0)
+
 	if includeSection, err := cfg.GetSection("include"); err == nil {
 		key, err := includeSection.GetValue("files")
 		if err == nil {
 			env := NewStringExpression("here", c.GetConfigFileDir())
 			files := strings.Fields(key)
 			for _, fRaw := range files {
-				dir := c.GetConfigFileDir()
+				var dir string
 				f, err := env.Eval(fRaw)
 				if err != nil {
 					continue
@@ -146,7 +146,7 @@ func (c *Config) getIncludeFiles(cfg *ini.Ini) []string {
 				} else {
 					dir = filepath.Join(c.GetConfigFileDir(), filepath.Dir(f))
 				}
-				fileInfos, err := ioutil.ReadDir(dir)
+				fileInfos, err := os.ReadDir(dir)
 				if err == nil {
 					goPattern := toRegexp(filepath.Base(f))
 					for _, fileInfo := range fileInfos {
@@ -155,10 +155,10 @@ func (c *Config) getIncludeFiles(cfg *ini.Ini) []string {
 						}
 					}
 				}
-
 			}
 		}
 	}
+
 	return result
 }
 
@@ -221,6 +221,9 @@ func (c *Config) GetUnixHTTPServer() (*Entry, bool) {
 // GetSupervisord returns "supervisord" configuration section
 func (c *Config) GetSupervisord() (*Entry, bool) {
 	entry, ok := c.entries["supervisord"]
+	if entry == nil {
+		panic("supervisord section is missing")
+	}
 	return entry, ok
 }
 

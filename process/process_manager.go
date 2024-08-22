@@ -33,7 +33,7 @@ func (pm *Manager) CreateProcess(supervisorID string, config *config.Entry) *Pro
 	} else if config.IsEventListener() {
 		return pm.createEventListener(supervisorID, config)
 	} else {
-		return nil
+		panic("unknown program type")
 	}
 }
 

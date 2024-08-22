@@ -258,6 +258,11 @@ func (s *Supervisor) startHTTPServer() {
 	httpServerConfig, ok := s.config.GetInetHTTPServer()
 	s.xmlRPC.Stop()
 	if ok {
+		if httpServerConfig == nil {
+			log.Error("fail to get supervisord configuration")
+			return
+		}
+
 		addr := httpServerConfig.GetString("port", "")
 		if addr != "" {
 			cond := sync.NewCond(&sync.Mutex{})
@@ -278,6 +283,11 @@ func (s *Supervisor) startHTTPServer() {
 
 	httpServerConfig, ok = s.config.GetUnixHTTPServer()
 	if ok {
+		if httpServerConfig == nil {
+			log.Error("fail to get supervisord configuration")
+			return
+		}
+
 		env := config.NewStringExpression("here", s.config.GetConfigFileDir())
 		sockFile, err := env.Eval(httpServerConfig.GetString("file", "/tmp/supervisord.sock"))
 		if err == nil {
@@ -301,6 +311,10 @@ func (s *Supervisor) startHTTPServer() {
 func (s *Supervisor) setSupervisordInfo() {
 	supervisordConf, ok := s.config.GetSupervisord()
 	if ok {
+		if supervisordConf == nil {
+			log.Error("fail to get supervisord configuration")
+			return
+		}
 		// set supervisord log
 
 		env := config.NewStringExpression("here", s.config.GetConfigFileDir())

@@ -49,7 +49,7 @@ func (h *httpBasicAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.Header().Set("WWW-Authenticate", "Basic realm=\"supervisor\"")
+	w.Header().Set("WWW-Authenticate", `Basic realm="supervisor"`)
 	w.WriteHeader(401)
 }
 
@@ -105,8 +105,7 @@ func getProgramConfigPath(programName string, s *Supervisor) string {
 		return ""
 	}
 
-	res := c.GetString("conf_file", "")
-	return res
+	return c.GetString("conf_file", "")
 }
 
 func (p *XMLRPC) startHTTPServer(user, password, protocol, listenAddr string, s *Supervisor, startedCb func()) {
