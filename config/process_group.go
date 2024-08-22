@@ -1,9 +1,6 @@
 package config
 
 import (
-	"bytes"
-	"strings"
-
 	"github.com/ochinchina/supervisord/util"
 )
 
@@ -80,22 +77,6 @@ func (pg *ProcessGroup) GetAllProcess(group string) []string {
 	return result
 }
 
-// InGroup checks if process belongs to a group or not
-func (pg *ProcessGroup) InGroup(procName string, group string) bool {
-	groupName, ok := pg.processGroup[procName]
-	if ok && group == groupName {
-		return true
-	}
-	return false
-}
-
-// ForEachProcess iterates all the processes and process it with procFunc
-func (pg *ProcessGroup) ForEachProcess(procFunc func(group string, procName string)) {
-	for procName, groupName := range pg.processGroup {
-		procFunc(groupName, procName)
-	}
-}
-
 // GetGroup gets group name of process. If group was not found by
 // procName, set its group to defGroup and return this defGroup
 func (pg *ProcessGroup) GetGroup(procName string, defGroup string) string {
@@ -106,16 +87,4 @@ func (pg *ProcessGroup) GetGroup(procName string, defGroup string) string {
 	}
 	pg.processGroup[procName] = defGroup
 	return defGroup
-}
-
-// String converts process and its group mapping to human-readable string
-func (pg *ProcessGroup) String() string {
-	buf := bytes.NewBuffer(make([]byte, 0))
-	for _, group := range pg.GetAllGroup() {
-		buf.WriteString(group)
-		buf.WriteString(":")
-		buf.WriteString(strings.Join(pg.GetAllProcess(group), ","))
-		buf.WriteString(";")
-	}
-	return buf.String()
 }

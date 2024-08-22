@@ -344,53 +344,6 @@ func (l *NullLogger) ClearAllLogFile() error {
 	return faults.NewFault(faults.NoFile, "NO_FILE")
 }
 
-// NewChanLogger creates ChanLogger object
-func NewChanLogger(channel chan []byte) *ChanLogger {
-	return &ChanLogger{channel: channel}
-}
-
-// SetPid sets program pid
-func (l *ChanLogger) SetPid(pid int) {
-	// NOTHING TO DO
-}
-
-// Write log to the channel
-func (l *ChanLogger) Write(p []byte) (int, error) {
-	l.channel <- p
-	return len(p), nil
-}
-
-// Close ChanLogger
-func (l *ChanLogger) Close() error {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Println("Error:", err)
-		}
-	}()
-	close(l.channel)
-	return nil
-}
-
-// ReadLog returns error for ChanLogger
-func (l *ChanLogger) ReadLog(offset int64, length int64) (string, error) {
-	return "", faults.NewFault(faults.NoFile, "NO_FILE")
-}
-
-// ReadTailLog returns error for ChanLogger
-func (l *ChanLogger) ReadTailLog(offset int64, length int64) (string, int64, bool, error) {
-	return "", 0, false, faults.NewFault(faults.NoFile, "NO_FILE")
-}
-
-// ClearCurLogFile returns error for ChanLogger
-func (l *ChanLogger) ClearCurLogFile() error {
-	return fmt.Errorf("no log")
-}
-
-// ClearAllLogFile returns error for ChanLogger
-func (l *ChanLogger) ClearAllLogFile() error {
-	return faults.NewFault(faults.NoFile, "NO_FILE")
-}
-
 // NewNullLocker creates new NullLocker object
 func NewNullLocker() *NullLocker {
 	return &NullLocker{}
@@ -529,16 +482,6 @@ func NewStdoutLogEventEmitter(processName string, groupName string, procPidFunc 
 	}
 }
 
-// NewStderrLogEventEmitter creates new StdLogEventEmitter object for emitting Stderr log events
-func NewStderrLogEventEmitter(processName string, groupName string, procPidFunc func() int) *StdLogEventEmitter {
-	return &StdLogEventEmitter{
-		Type:        "stderr",
-		processName: processName,
-		groupName:   groupName,
-		pidFunc:     procPidFunc,
-	}
-}
-
 // emitLogEvent emits stdout/stderr log event (with data)
 func (se *StdLogEventEmitter) emitLogEvent(data string) {
 	if se.Type == "stdout" {
@@ -553,42 +496,6 @@ type BackgroundWriteCloser struct {
 	io.WriteCloser
 	logChannel  chan []byte
 	writeCloser io.WriteCloser
-}
-
-// NewBackgroundWriteCloser creates new BackgroundWriteCloser object
-func NewBackgroundWriteCloser(writeCloser io.WriteCloser) *BackgroundWriteCloser {
-	channel := make(chan []byte)
-	bw := &BackgroundWriteCloser{
-		logChannel:  channel,
-		writeCloser: writeCloser,
-	}
-
-	bw.start()
-	return bw
-}
-
-func (bw *BackgroundWriteCloser) start() {
-	go func() {
-		for {
-			b, ok := <-bw.logChannel
-			if !ok {
-				break
-			}
-			bw.writeCloser.Write(b)
-		}
-	}()
-}
-
-// Write data in background
-func (bw *BackgroundWriteCloser) Write(p []byte) (n int, err error) {
-	bw.logChannel <- p
-	return len(p), nil
-}
-
-// Close background data channel
-func (bw *BackgroundWriteCloser) Close() error {
-	close(bw.logChannel)
-	return bw.writeCloser.Close()
 }
 
 // NewCompositeLogger creates new CompositeLogger object (pool of loggers)

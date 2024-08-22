@@ -358,27 +358,6 @@ func RegisterEventListener(eventListenerName string,
 	eventListenerManager.registerEventListener(eventListenerName, events, listener)
 }
 
-func (em *EventListenerManager) unregisterEventListener(eventListenerName string) *EventListener {
-	listener, ok := em.namedListeners[eventListenerName]
-	if ok {
-		delete(em.namedListeners, eventListenerName)
-		for event, listeners := range em.eventListeners {
-			if _, ok = listeners[listener]; ok {
-				log.WithFields(log.Fields{"eventListener": eventListenerName, "event": event}).Info("unregister event listener")
-			}
-
-			delete(listeners, listener)
-		}
-		return listener
-	}
-	return nil
-}
-
-// UnregisterEventListener unregisters event listener by its name
-func UnregisterEventListener(eventListenerName string) *EventListener {
-	return eventListenerManager.unregisterEventListener(eventListenerName)
-}
-
 // EmitEvent emits event to all listeners managed by this manager
 func (em *EventListenerManager) EmitEvent(event Event) {
 	listeners, ok := em.eventListeners[event.GetType()]
@@ -396,19 +375,6 @@ type RemoteCommunicationEvent struct {
 	BaseEvent
 	typ  string
 	data string
-}
-
-// NewRemoteCommunicationEvent creates new RemoteCommunicationEvent object
-func NewRemoteCommunicationEvent(typ string, data string) *RemoteCommunicationEvent {
-	r := &RemoteCommunicationEvent{typ: typ, data: data}
-	r.eventType = "REMOTE_COMMUNICATION"
-	r.serial = nextEventSerial()
-	return r
-}
-
-// GetBody returns event' body
-func (r *RemoteCommunicationEvent) GetBody() string {
-	return fmt.Sprintf("type:%s\n%s", r.typ, r.data)
 }
 
 // ProcCommEvent process communication event definition
@@ -751,19 +717,6 @@ type SupervisorStateChangeEvent struct {
 	BaseEvent
 }
 
-// GetBody returns body of supervisor state change event
-func (s *SupervisorStateChangeEvent) GetBody() string {
-	return ""
-}
-
-// CreateSupervisorStateChangeRunning creates SupervisorStateChangeEvent object
-func CreateSupervisorStateChangeRunning() *SupervisorStateChangeEvent {
-	r := &SupervisorStateChangeEvent{}
-	r.eventType = "SUPERVISOR_STATE_CHANGE_RUNNING"
-	r.serial = nextEventSerial()
-	return r
-}
-
 // func createSupervisorStateChangeStopping() *SupervisorStateChangeEvent {
 // 	r := &SupervisorStateChangeEvent{}
 // 	r.eventType = "SUPERVISOR_STATE_CHANGE_STOPPING"
@@ -827,27 +780,4 @@ func CreateProcessLogStderrEvent(processName string,
 type ProcessGroupEvent struct {
 	BaseEvent
 	groupName string
-}
-
-// GetBody returns body of process group event
-func (pe *ProcessGroupEvent) GetBody() string {
-	return fmt.Sprintf("groupname:%s", pe.groupName)
-}
-
-// CreateProcessGroupAddedEvent emits create process group added event
-func CreateProcessGroupAddedEvent(groupName string) *ProcessGroupEvent {
-	r := &ProcessGroupEvent{groupName: groupName}
-
-	r.eventType = "PROCESS_GROUP_ADDED"
-	r.serial = nextEventSerial()
-	return r
-}
-
-// CreateProcessGroupRemovedEvent emits create process group removed event
-func CreateProcessGroupRemovedEvent(groupName string) *ProcessGroupEvent {
-	r := &ProcessGroupEvent{groupName: groupName}
-
-	r.eventType = "PROCESS_GROUP_REMOVED"
-	r.serial = nextEventSerial()
-	return r
 }

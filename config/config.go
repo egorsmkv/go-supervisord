@@ -74,10 +74,6 @@ func (c *Entry) GetPrograms() []string {
 	return make([]string, 0)
 }
 
-func (c *Entry) setGroup(group string) {
-	c.Group = group
-}
-
 // String dumps configuration as a string
 func (c *Entry) String() string {
 	buf := bytes.NewBuffer(make([]byte, 0))
@@ -234,12 +230,6 @@ func (c *Config) GetInetHTTPServer() (*Entry, bool) {
 	return entry, ok
 }
 
-// GetSupervisorctl returns "supervisorctl" configuration section
-func (c *Config) GetSupervisorctl() (*Entry, bool) {
-	entry, ok := c.entries["supervisorctl"]
-	return entry, ok
-}
-
 // GetEntries returns configuration entries by filter
 func (c *Config) GetEntries(filterFunc func(entry *Entry) bool) []*Entry {
 	result := make([]*Entry, 0)
@@ -249,13 +239,6 @@ func (c *Config) GetEntries(filterFunc func(entry *Entry) bool) []*Entry {
 		}
 	}
 	return result
-}
-
-// GetGroups returns configuration entries of all program groups
-func (c *Config) GetGroups() []*Entry {
-	return c.GetEntries(func(entry *Entry) bool {
-		return entry.IsGroup()
-	})
 }
 
 // GetPrograms returns configuration entries of all programs
@@ -642,16 +625,6 @@ func (c *Config) parseProgram(cfg *ini.Ini) []string {
 		}
 	}
 	return loadedPrograms
-}
-
-// String converts configuration to the string
-func (c *Config) String() string {
-	buf := bytes.NewBuffer(make([]byte, 0))
-	for _, v := range c.entries {
-		fmt.Fprintf(buf, "[%s]\n", v.Name)
-		fmt.Fprintf(buf, "%s\n", v.String())
-	}
-	return buf.String()
 }
 
 // RemoveProgram removes program entry by its name
