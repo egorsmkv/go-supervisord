@@ -27,5 +27,4 @@ func TestSplitLogFile(t *testing.T) {
 	if files[2] != "test2.log" {
 		t.Error("Fail to get third log file")
 	}
-
 }

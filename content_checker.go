@@ -25,10 +25,12 @@ type BaseChecker struct {
 
 // NewBaseChecker creates BaseChecker object
 func NewBaseChecker(includes []string, timeout int) *BaseChecker {
-	return &BaseChecker{data: "",
+	return &BaseChecker{
+		data:          "",
 		includes:      includes,
 		timeoutTime:   time.Now().Add(time.Duration(timeout) * time.Second),
-		notifyChannel: make(chan string, 1)}
+		notifyChannel: make(chan string, 1),
+	}
 }
 
 // Write data to the checker
@@ -97,9 +99,11 @@ type TCPChecker struct {
 
 // NewTCPChecker creates TCPChecker object
 func NewTCPChecker(host string, port int, includes []string, timeout int) *TCPChecker {
-	checker := &TCPChecker{host: host,
+	checker := &TCPChecker{
+		host:        host,
 		port:        port,
-		baseChecker: NewBaseChecker(includes, timeout)}
+		baseChecker: NewBaseChecker(includes, timeout),
+	}
 	checker.start()
 	return checker
 }
@@ -144,8 +148,10 @@ type HTTPChecker struct {
 
 // NewHTTPChecker creates HTTPChecker object
 func NewHTTPChecker(url string, timeout int) *HTTPChecker {
-	return &HTTPChecker{url: url,
-		timeoutTime: time.Now().Add(time.Duration(timeout) * time.Second)}
+	return &HTTPChecker{
+		url:         url,
+		timeoutTime: time.Now().Add(time.Duration(timeout) * time.Second),
+	}
 }
 
 // Check content of HTTP response

@@ -77,5 +77,4 @@ func (c *procCollector) collectProcessMetrics(proc *Process, ch chan<- prometheu
 	} else {
 		ch <- prometheus.MustNewConstMetric(c.upDesc, prometheus.GaugeValue, 0, labels...)
 	}
-
 }

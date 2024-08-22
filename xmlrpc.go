@@ -192,5 +192,4 @@ func (p *XMLRPC) startHTTPServer(user string, password string, protocol string, 
 		startedCb()
 		log.WithFields(log.Fields{"addr": listenAddr, "protocol": protocol}).Fatal("fail to listen on address")
 	}
-
 }

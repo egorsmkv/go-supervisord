@@ -485,7 +485,6 @@ func (c *Entry) GetStringExpression(key string, defValue string) string {
 		"group_name", c.GetGroupName(),
 		"here", c.ConfigDir,
 		"host_node_name", hostName).Eval(s)
-
 	if err != nil {
 		log.WithFields(log.Fields{
 			log.ErrorKey: err,
@@ -541,7 +540,6 @@ func (c *Entry) parse(section *ini.Section) {
 }
 
 func (c *Config) parseGroup(cfg *ini.Ini) {
-
 	// parse the group at first
 	for _, section := range cfg.Sections() {
 		if strings.HasPrefix(section.Name, "group:") {

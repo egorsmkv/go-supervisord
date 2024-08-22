@@ -7,5 +7,4 @@ import (
 )
 
 func setUserID(_ *syscall.SysProcAttr, _ uint32, _ uint32) {
-
 }

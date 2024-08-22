@@ -146,5 +146,4 @@ func init() {
 		"initialize a template",
 		"The init subcommand writes the supported configurations to specified file",
 		&initTemplateCommand)
-
 }

@@ -31,7 +31,6 @@ func NewStringExpression(envs ...string) *StringExpression {
 	}
 
 	return se
-
 }
 
 // Add adds environment variable (key,value)

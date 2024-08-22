@@ -8,8 +8,7 @@ import (
 const VERSION = "v0.7.3"
 
 // VersionCommand implement the flags.Commander interface
-type VersionCommand struct {
-}
+type VersionCommand struct{}
 
 var versionCommand VersionCommand
 

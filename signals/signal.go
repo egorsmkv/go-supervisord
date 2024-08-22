@@ -9,7 +9,8 @@ import (
 	"syscall"
 )
 
-var signalMap = map[string]os.Signal{"SIGABRT": syscall.SIGABRT,
+var signalMap = map[string]os.Signal{
+	"SIGABRT":   syscall.SIGABRT,
 	"SIGALRM":   syscall.SIGALRM,
 	"SIGBUS":    syscall.SIGBUS,
 	"SIGCHLD":   syscall.SIGCHLD,
@@ -43,7 +44,8 @@ var signalMap = map[string]os.Signal{"SIGABRT": syscall.SIGABRT,
 	"SIGVTALRM": syscall.SIGVTALRM,
 	"SIGWINCH":  syscall.SIGWINCH,
 	"SIGXCPU":   syscall.SIGXCPU,
-	"SIGXFSZ":   syscall.SIGXFSZ}
+	"SIGXFSZ":   syscall.SIGXFSZ,
+}
 
 // ToSignal returns OS dependent signal name for given signal name (or syscall.SIGTERM if garbage given)
 func ToSignal(signalName string) (os.Signal, error) {

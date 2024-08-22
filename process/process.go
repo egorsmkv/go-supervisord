@@ -103,15 +103,17 @@ type Process struct {
 
 // NewProcess creates new Process object
 func NewProcess(supervisorID string, config *config.Entry) *Process {
-	proc := &Process{supervisorID: supervisorID,
-		config:     config,
-		cmd:        nil,
-		startTime:  time.Unix(0, 0),
-		stopTime:   time.Unix(0, 0),
-		state:      Stopped,
-		inStart:    false,
-		stopByUser: false,
-		retryTimes: new(int32)}
+	proc := &Process{
+		supervisorID: supervisorID,
+		config:       config,
+		cmd:          nil,
+		startTime:    time.Unix(0, 0),
+		stopTime:     time.Unix(0, 0),
+		state:        Stopped,
+		inStart:      false,
+		stopByUser:   false,
+		retryTimes:   new(int32),
+	}
 	proc.config = config
 	proc.cmd = nil
 	proc.addToCron()
@@ -135,7 +137,6 @@ func (p *Process) addToCron() {
 			}
 		})
 	}
-
 }
 
 // Start process
@@ -162,7 +163,6 @@ func (p *Process) Start(wait bool) {
 	}
 
 	go func() {
-
 		for {
 			p.run(func() {
 				if wait {
@@ -356,7 +356,6 @@ func (p *Process) isAutoRestart() bool {
 		}
 	}
 	return false
-
 }
 
 func (p *Process) inExitCodes(exitCode int) bool {
@@ -377,7 +376,6 @@ func (p *Process) getExitCode() (int, error) {
 	}
 
 	return -1, fmt.Errorf("no exit code")
-
 }
 
 func (p *Process) getExitCodes() []int {
@@ -407,7 +405,6 @@ func (p *Process) isRunning() bool {
 // create Command object for the program
 func (p *Process) createProgramCommand() error {
 	args, err := parseCommand(p.config.GetStringExpression("command", ""))
-
 	if err != nil {
 		return err
 	}
@@ -427,7 +424,6 @@ func (p *Process) createProgramCommand() error {
 
 	p.stdin, _ = p.cmd.StdinPipe()
 	return nil
-
 }
 
 func (p *Process) setProgramRestartChangeMonitor(programPath string) {
@@ -453,7 +449,6 @@ func (p *Process) setProgramRestartChangeMonitor(programPath string) {
 				p.Stop(true)
 				p.Start(true)
 			}
-
 		})
 	}
 	dirMonitor := p.config.GetString("restart_directory_monitor", "")
@@ -482,7 +477,6 @@ func (p *Process) setProgramRestartChangeMonitor(programPath string) {
 			}
 		})
 	}
-
 }
 
 // wait for the started program exit
@@ -565,7 +559,6 @@ func (p *Process) run(finishCb func()) {
 		}
 
 		err = p.cmd.Start()
-
 		if err != nil {
 			if atomic.LoadInt32(p.retryTimes) >= p.getStartRetries() {
 				p.failToStartProgram(fmt.Sprintf("fail to start program with error:%v", err), finishCbWrapper)
@@ -665,7 +658,6 @@ func (p *Process) run(finishCb func()) {
 			break
 		}
 	}
-
 }
 
 func (p *Process) changeStateTo(procState State) {
@@ -836,7 +828,8 @@ func (p *Process) createStderrLogEventEmitter() logger.LogEventEmitter {
 func (p *Process) registerEventListener(eventListenerName string,
 	_events []string,
 	stdin io.Reader,
-	stdout io.Writer) {
+	stdout io.Writer,
+) {
 	eventListener := events.NewEventListener(eventListenerName,
 		p.supervisorID,
 		stdin,

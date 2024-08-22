@@ -96,14 +96,17 @@ func NewEventListener(pool string,
 	server string,
 	stdin io.Reader,
 	stdout io.Writer,
-	bufferSize int) *EventListener {
-	evtListener := &EventListener{pool: pool,
+	bufferSize int,
+) *EventListener {
+	evtListener := &EventListener{
+		pool:       pool,
 		server:     server,
 		cond:       sync.NewCond(new(sync.Mutex)),
 		events:     list.New(),
 		stdin:      bufio.NewReader(stdin),
 		stdout:     stdout,
-		bufferSize: bufferSize}
+		bufferSize: bufferSize,
+	}
 	evtListener.start()
 	return evtListener
 }
@@ -267,19 +270,25 @@ var eventTypeDerives = map[string][]string{
 	"TICK_60":                          {"EVENT", "TICK"},
 	"TICK_3600":                        {"EVENT", "TICK"},
 	"PROCESS_GROUP_ADDED":              {"EVENT", "PROCESS_GROUP"},
-	"PROCESS_GROUP_REMOVED":            {"EVENT", "PROCESS_GROUP"}}
-var eventSerial uint64
-var eventListenerManager = NewEventListenerManager()
-var eventPoolSerial = NewEventPoolSerial()
+	"PROCESS_GROUP_REMOVED":            {"EVENT", "PROCESS_GROUP"},
+}
+
+var (
+	eventSerial          uint64
+	eventListenerManager = NewEventListenerManager()
+	eventPoolSerial      = NewEventPoolSerial()
+)
 
 func init() {
 	startTickTimer()
 }
 
 func startTickTimer() {
-	tickConfigs := map[string]int64{"TICK_5": 5,
+	tickConfigs := map[string]int64{
+		"TICK_5":    5,
 		"TICK_60":   60,
-		"TICK_3600": 3600}
+		"TICK_3600": 3600,
+	}
 
 	// start a Tick timer
 	go func() {
@@ -307,14 +316,16 @@ func nextEventSerial() uint64 {
 
 // NewEventListenerManager creates EventListenerManager object
 func NewEventListenerManager() *EventListenerManager {
-	return &EventListenerManager{namedListeners: make(map[string]*EventListener),
-		eventListeners: make(map[string]map[*EventListener]bool)}
+	return &EventListenerManager{
+		namedListeners: make(map[string]*EventListener),
+		eventListeners: make(map[string]map[*EventListener]bool),
+	}
 }
 
 func (em *EventListenerManager) registerEventListener(eventListenerName string,
 	events []string,
-	listener *EventListener) {
-
+	listener *EventListener,
+) {
 	em.namedListeners[eventListenerName] = listener
 	allEvents := make(map[string]bool)
 	for _, event := range events {
@@ -342,7 +353,8 @@ func (em *EventListenerManager) registerEventListener(eventListenerName string,
 // RegisterEventListener registers event listener to accept the emitted events
 func RegisterEventListener(eventListenerName string,
 	events []string,
-	listener *EventListener) {
+	listener *EventListener,
+) {
 	eventListenerManager.registerEventListener(eventListenerName, events, listener)
 }
 
@@ -413,12 +425,15 @@ func NewProcCommEvent(eventType string,
 	procName string,
 	groupName string,
 	pid int,
-	data string) *ProcCommEvent {
-	return &ProcCommEvent{BaseEvent: BaseEvent{eventType: eventType, serial: nextEventSerial()},
+	data string,
+) *ProcCommEvent {
+	return &ProcCommEvent{
+		BaseEvent:   BaseEvent{eventType: eventType, serial: nextEventSerial()},
 		processName: procName,
 		groupName:   groupName,
 		pid:         pid,
-		data:        data}
+		data:        data,
+	}
 }
 
 // GetBody returns process communication event' body
@@ -467,15 +482,18 @@ func NewProcCommEventCapture(reader io.Reader,
 	captureMaxBytes int,
 	stdType string,
 	procName string,
-	groupName string) *ProcCommEventCapture {
-	pec := &ProcCommEventCapture{reader: reader,
+	groupName string,
+) *ProcCommEventCapture {
+	pec := &ProcCommEventCapture{
+		reader:          reader,
 		captureMaxBytes: captureMaxBytes,
 		stdType:         stdType,
 		procName:        procName,
 		groupName:       groupName,
 		pid:             -1,
 		eventBuffer:     "",
-		eventBeginPos:   -1}
+		eventBeginPos:   -1,
+	}
 	pec.startCapture()
 	return pec
 }
@@ -564,13 +582,16 @@ type ProcessStateEvent struct {
 func CreateProcessStartingEvent(process string,
 	group string,
 	fromState string,
-	tries int) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     tries,
-		expected:  -1,
-		pid:       0}
+	tries int,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       tries,
+		expected:    -1,
+		pid:         0,
+	}
 	r.eventType = "PROCESS_STATE_STARTING"
 	r.serial = nextEventSerial()
 	return r
@@ -580,13 +601,16 @@ func CreateProcessStartingEvent(process string,
 func CreateProcessRunningEvent(process string,
 	group string,
 	fromState string,
-	pid int) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     -1,
-		expected:  -1,
-		pid:       pid}
+	pid int,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       -1,
+		expected:    -1,
+		pid:         pid,
+	}
 	r.eventType = "PROCESS_STATE_RUNNING"
 	r.serial = nextEventSerial()
 	return r
@@ -596,13 +620,16 @@ func CreateProcessRunningEvent(process string,
 func CreateProcessBackoffEvent(process string,
 	group string,
 	fromState string,
-	tries int) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     tries,
-		expected:  -1,
-		pid:       0}
+	tries int,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       tries,
+		expected:    -1,
+		pid:         0,
+	}
 	r.eventType = "PROCESS_STATE_BACKOFF"
 	r.serial = nextEventSerial()
 	return r
@@ -612,13 +639,16 @@ func CreateProcessBackoffEvent(process string,
 func CreateProcessStoppingEvent(process string,
 	group string,
 	fromState string,
-	pid int) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     -1,
-		expected:  -1,
-		pid:       pid}
+	pid int,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       -1,
+		expected:    -1,
+		pid:         pid,
+	}
 	r.eventType = "PROCESS_STATE_STOPPING"
 	r.serial = nextEventSerial()
 	return r
@@ -629,13 +659,16 @@ func CreateProcessExitedEvent(process string,
 	group string,
 	fromState string,
 	expected int,
-	pid int) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     -1,
-		expected:  expected,
-		pid:       pid}
+	pid int,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       -1,
+		expected:    expected,
+		pid:         pid,
+	}
 	r.eventType = "PROCESS_STATE_EXITED"
 	r.serial = nextEventSerial()
 	return r
@@ -645,13 +678,16 @@ func CreateProcessExitedEvent(process string,
 func CreateProcessStoppedEvent(process string,
 	group string,
 	fromState string,
-	pid int) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     -1,
-		expected:  -1,
-		pid:       pid}
+	pid int,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       -1,
+		expected:    -1,
+		pid:         pid,
+	}
 	r.eventType = "PROCESS_STATE_STOPPED"
 	r.serial = nextEventSerial()
 	return r
@@ -660,13 +696,16 @@ func CreateProcessStoppedEvent(process string,
 // CreateProcessFatalEvent emits create process fatal error event
 func CreateProcessFatalEvent(process string,
 	group string,
-	fromState string) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     -1,
-		expected:  -1,
-		pid:       0}
+	fromState string,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       -1,
+		expected:    -1,
+		pid:         0,
+	}
 	r.eventType = "PROCESS_STATE_FATAL"
 	r.serial = nextEventSerial()
 	return r
@@ -675,13 +714,16 @@ func CreateProcessFatalEvent(process string,
 // CreateProcessUnknownEvent emits create process state unknown event
 func CreateProcessUnknownEvent(process string,
 	group string,
-	fromState string) *ProcessStateEvent {
-	r := &ProcessStateEvent{processName: process,
-		groupName: group,
-		fromState: fromState,
-		tries:     -1,
-		expected:  -1,
-		pid:       0}
+	fromState string,
+) *ProcessStateEvent {
+	r := &ProcessStateEvent{
+		processName: process,
+		groupName:   group,
+		fromState:   fromState,
+		tries:       -1,
+		expected:    -1,
+		pid:         0,
+	}
 	r.eventType = "PROCESS_STATE_UNKNOWN"
 	r.serial = nextEventSerial()
 	return r
@@ -751,11 +793,14 @@ func (pe *ProcessLogEvent) GetBody() string {
 func CreateProcessLogStdoutEvent(processName string,
 	groupName string,
 	pid int,
-	data string) *ProcessLogEvent {
-	r := &ProcessLogEvent{processName: processName,
-		groupName: groupName,
-		pid:       pid,
-		data:      data}
+	data string,
+) *ProcessLogEvent {
+	r := &ProcessLogEvent{
+		processName: processName,
+		groupName:   groupName,
+		pid:         pid,
+		data:        data,
+	}
 	r.eventType = "PROCESS_LOG_STDOUT"
 	r.serial = nextEventSerial()
 	return r
@@ -765,11 +810,14 @@ func CreateProcessLogStdoutEvent(processName string,
 func CreateProcessLogStderrEvent(processName string,
 	groupName string,
 	pid int,
-	data string) *ProcessLogEvent {
-	r := &ProcessLogEvent{processName: processName,
-		groupName: groupName,
-		pid:       pid,
-		data:      data}
+	data string,
+) *ProcessLogEvent {
+	r := &ProcessLogEvent{
+		processName: processName,
+		groupName:   groupName,
+		pid:         pid,
+		data:        data,
+	}
 	r.eventType = "PROCESS_LOG_STDERR"
 	r.serial = nextEventSerial()
 	return r

@@ -31,8 +31,10 @@ type ProcessSorter struct {
 
 // NewProcessSorter creates sorter
 func NewProcessSorter() *ProcessSorter {
-	return &ProcessSorter{dependsOnGraph: make(map[string][]string),
-		procsWithooutDepends: make([]*Entry, 0)}
+	return &ProcessSorter{
+		dependsOnGraph:       make(map[string][]string),
+		procsWithooutDepends: make([]*Entry, 0),
+	}
 }
 
 func (p *ProcessSorter) initDepends(programConfigs []*Entry) {
@@ -53,7 +55,6 @@ func (p *ProcessSorter) initDepends(programConfigs []*Entry) {
 			}
 		}
 	}
-
 }
 
 func (p *ProcessSorter) initProgramWithoutDepends(programConfigs []*Entry) {

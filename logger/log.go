@@ -51,8 +51,7 @@ type NullLogger struct {
 }
 
 // NullLocker no lock
-type NullLocker struct {
-}
+type NullLocker struct{}
 
 // ChanLogger write log message by channel
 type ChanLogger struct {
@@ -67,13 +66,15 @@ type CompositeLogger struct {
 
 // NewFileLogger creates FileLogger object
 func NewFileLogger(name string, maxSize int64, backups int, logEventEmitter LogEventEmitter, locker sync.Locker) *FileLogger {
-	logger := &FileLogger{name: name,
+	logger := &FileLogger{
+		name:            name,
 		maxSize:         maxSize,
 		backups:         backups,
 		fileSize:        0,
 		file:            nil,
 		logEventEmitter: logEventEmitter,
-		locker:          locker}
+		locker:          locker,
+	}
 	logger.openFile(false)
 	return logger
 }
@@ -95,7 +96,7 @@ func (l *FileLogger) openFile(trunc bool) error {
 		l.file, err = os.Create(l.name)
 	} else {
 		l.fileSize = fileInfo.Size()
-		l.file, err = os.OpenFile(l.name, os.O_RDWR|os.O_APPEND, 0666)
+		l.file, err = os.OpenFile(l.name, os.O_RDWR|os.O_APPEND, 0o666)
 	}
 	if err != nil {
 		fmt.Printf("Fail to open log file --%s-- with error %v\n", l.name, err)
@@ -157,7 +158,6 @@ func (l *FileLogger) ReadLog(offset int64, length int64) (string, error) {
 	l.locker.Lock()
 	defer l.locker.Unlock()
 	f, err := os.Open(l.name)
-
 	if err != nil {
 		return "", faults.NewFault(faults.Failed, "FAILED")
 	}
@@ -247,7 +247,6 @@ func (l *FileLogger) ReadTailLog(offset int64, length int64) (string, int64, boo
 		return "", offset, false, err
 	}
 	return string(b[:n]), offset + int64(n), false, nil
-
 }
 
 // Write overrides function in io.Writer. Write log message to the file
@@ -256,7 +255,6 @@ func (l *FileLogger) Write(p []byte) (int, error) {
 	defer l.locker.Unlock()
 
 	n, err := l.file.Write(p)
-
 	if err != nil {
 		return n, err
 	}
@@ -415,8 +413,10 @@ type StdLogger struct {
 
 // NewStdoutLogger creates StdLogger object
 func NewStdoutLogger(logEventEmitter LogEventEmitter) *StdLogger {
-	return &StdLogger{logEventEmitter: logEventEmitter,
-		writer: os.Stdout}
+	return &StdLogger{
+		logEventEmitter: logEventEmitter,
+		writer:          os.Stdout,
+	}
 }
 
 // Write output to stdout/stderr
@@ -430,8 +430,10 @@ func (l *StdLogger) Write(p []byte) (int, error) {
 
 // NewStderrLogger creates stderr logger
 func NewStderrLogger(logEventEmitter LogEventEmitter) *StdLogger {
-	return &StdLogger{logEventEmitter: logEventEmitter,
-		writer: os.Stderr}
+	return &StdLogger{
+		logEventEmitter: logEventEmitter,
+		writer:          os.Stderr,
+	}
 }
 
 // LogCaptureLogger capture the log for further analysis
@@ -446,16 +448,19 @@ func NewLogCaptureLogger(underlineLogger Logger,
 	captureMaxBytes int,
 	stdType string,
 	procName string,
-	groupName string) *LogCaptureLogger {
+	groupName string,
+) *LogCaptureLogger {
 	r, w := io.Pipe()
 	eventCapture := events.NewProcCommEventCapture(r,
 		captureMaxBytes,
 		stdType,
 		procName,
 		groupName)
-	return &LogCaptureLogger{underlineLogger: underlineLogger,
+	return &LogCaptureLogger{
+		underlineLogger:        underlineLogger,
 		procCommEventCapWriter: w,
-		procCommEventCapture:   eventCapture}
+		procCommEventCapture:   eventCapture,
+	}
 }
 
 // SetPid sets pid of program
@@ -495,8 +500,7 @@ func (l *LogCaptureLogger) ClearAllLogFile() error {
 }
 
 // NullLogEventEmitter will not emit log to any listener
-type NullLogEventEmitter struct {
-}
+type NullLogEventEmitter struct{}
 
 // NewNullLogEventEmitter creates new NullLogEventEmitter object
 func NewNullLogEventEmitter() *NullLogEventEmitter {
@@ -517,18 +521,22 @@ type StdLogEventEmitter struct {
 
 // NewStdoutLogEventEmitter creates new StdLogEventEmitter object
 func NewStdoutLogEventEmitter(processName string, groupName string, procPidFunc func() int) *StdLogEventEmitter {
-	return &StdLogEventEmitter{Type: "stdout",
+	return &StdLogEventEmitter{
+		Type:        "stdout",
 		processName: processName,
 		groupName:   groupName,
-		pidFunc:     procPidFunc}
+		pidFunc:     procPidFunc,
+	}
 }
 
 // NewStderrLogEventEmitter creates new StdLogEventEmitter object for emitting Stderr log events
 func NewStderrLogEventEmitter(processName string, groupName string, procPidFunc func() int) *StdLogEventEmitter {
-	return &StdLogEventEmitter{Type: "stderr",
+	return &StdLogEventEmitter{
+		Type:        "stderr",
 		processName: processName,
 		groupName:   groupName,
-		pidFunc:     procPidFunc}
+		pidFunc:     procPidFunc,
+	}
 }
 
 // emitLogEvent emits stdout/stderr log event (with data)
@@ -550,8 +558,10 @@ type BackgroundWriteCloser struct {
 // NewBackgroundWriteCloser creates new BackgroundWriteCloser object
 func NewBackgroundWriteCloser(writeCloser io.WriteCloser) *BackgroundWriteCloser {
 	channel := make(chan []byte)
-	bw := &BackgroundWriteCloser{logChannel: channel,
-		writeCloser: writeCloser}
+	bw := &BackgroundWriteCloser{
+		logChannel:  channel,
+		writeCloser: writeCloser,
+	}
 
 	bw.start()
 	return bw

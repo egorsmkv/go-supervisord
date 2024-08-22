@@ -90,10 +90,12 @@ type ProcessTailLog struct {
 
 // NewSupervisor create a Supervisor object with supervisor configuration file
 func NewSupervisor(configFile string) *Supervisor {
-	return &Supervisor{config: config.NewConfig(configFile),
+	return &Supervisor{
+		config:     config.NewConfig(configFile),
 		procMgr:    process.NewManager(),
 		xmlRPC:     NewXMLRPC(),
-		restarting: false}
+		restarting: false,
+	}
 }
 
 // GetConfig get the loaded supervisor configuration
@@ -195,7 +197,8 @@ func (s *Supervisor) IsRestarting() bool {
 }
 
 func getProcessInfo(proc *process.Process) *types.ProcessInfo {
-	return &types.ProcessInfo{Name: proc.GetName(),
+	return &types.ProcessInfo{
+		Name:          proc.GetName(),
 		Group:         proc.GetGroup(),
 		Description:   proc.GetDescription(),
 		Start:         int(proc.GetStartTime().Unix()),
@@ -208,8 +211,8 @@ func getProcessInfo(proc *process.Process) *types.ProcessInfo {
 		Logfile:       proc.GetStdoutLogfile(),
 		StdoutLogfile: proc.GetStdoutLogfile(),
 		StderrLogfile: proc.GetStderrLogfile(),
-		Pid:           proc.GetPid()}
-
+		Pid:           proc.GetPid(),
+	}
 }
 
 // GetAllProcessInfo get all the program information managed by supervisor
@@ -252,8 +255,8 @@ func (s *Supervisor) StartProcess(r *http.Request, args *StartProcessArgs, reply
 // StartAllProcesses start all the programs
 func (s *Supervisor) StartAllProcesses(r *http.Request, args *struct {
 	Wait bool `default:"true"`
-}, reply *struct{ RPCTaskResults []RPCTaskResult }) error {
-
+}, reply *struct{ RPCTaskResults []RPCTaskResult },
+) error {
 	finishedProcCh := make(chan *process.Process)
 
 	n := s.procMgr.AsyncForEachProcess(func(proc *process.Process) {
@@ -332,7 +335,8 @@ func (s *Supervisor) StopProcessGroup(r *http.Request, args *StartProcessArgs, r
 // StopAllProcesses stop all programs managed by supervisor
 func (s *Supervisor) StopAllProcesses(r *http.Request, args *struct {
 	Wait bool `default:"true"`
-}, reply *struct{ RPCTaskResults []RPCTaskResult }) error {
+}, reply *struct{ RPCTaskResults []RPCTaskResult },
+) error {
 	finishedProcCh := make(chan *process.Process)
 
 	n := s.procMgr.AsyncForEachProcess(func(proc *process.Process) {
@@ -467,7 +471,6 @@ func (s *Supervisor) Reload(restart bool) (addedGroup []string, changedGroup []s
 	}
 	addedGroup, changedGroup, removedGroup = s.config.ProgramGroup.Sub(prevProgGroup)
 	return addedGroup, changedGroup, removedGroup, err
-
 }
 
 // WaitForExit waits for supervisord to exit
@@ -482,7 +485,6 @@ func (s *Supervisor) WaitForExit() {
 }
 
 func (s *Supervisor) createPrograms(prevPrograms []string) {
-
 	programs := s.config.GetProgramNames()
 	for _, entry := range s.config.GetPrograms() {
 		s.procMgr.CreateProcess(s.GetSupervisorID(), entry)
@@ -551,7 +553,6 @@ func (s *Supervisor) startHTTPServer() {
 			cond.Wait()
 		}
 	}
-
 }
 
 func (s *Supervisor) setSupervisordInfo() {
@@ -700,7 +701,6 @@ func (s *Supervisor) ClearProcessLogs(r *http.Request, args *struct{ Name string
 
 // ClearAllProcessLogs clears logs of all programs
 func (s *Supervisor) ClearAllProcessLogs(r *http.Request, args *struct{}, reply *struct{ RPCTaskResults []RPCTaskResult }) error {
-
 	s.procMgr.ForEachProcess(func(proc *process.Process) {
 		proc.StdoutLog.ClearAllLogFile()
 		proc.StderrLog.ClearAllLogFile()

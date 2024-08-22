@@ -8,8 +8,7 @@ import (
 )
 
 // ServiceCommand install/uninstall/start/stop supervisord service
-type ServiceCommand struct {
-}
+type ServiceCommand struct{}
 
 var serviceCommand ServiceCommand
 
