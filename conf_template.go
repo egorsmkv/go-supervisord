@@ -108,12 +108,6 @@ serverurl=AUTO
 buffer_size=10240
 events=PROCESS_STATE
 #result_handler=not support
-
-[supervisorctl]
-serverurl = unix:///tmp/supervisor.sock
-username = chris
-password = 123
-#prompt = not support
 `
 
 // InitTemplateCommand implements flags.Commander interface

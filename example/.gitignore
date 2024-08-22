@@ -1,0 +1,5 @@
+stderr.log
+stdout.log
+
+supervisord.log
+supervisord.pid
