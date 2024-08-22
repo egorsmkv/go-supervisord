@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 	"unicode"
@@ -156,11 +155,7 @@ func main() {
 	if logFormat == "json" {
 		log.SetFormatter(&log.JSONFormatter{})
 	} else {
-		if runtime.GOOS == "windows" {
-			log.SetFormatter(&log.TextFormatter{DisableColors: true, FullTimestamp: true})
-		} else {
-			log.SetFormatter(&log.TextFormatter{DisableColors: false, FullTimestamp: true})
-		}
+		log.SetFormatter(&log.TextFormatter{DisableColors: false, FullTimestamp: true})
 	}
 	log.SetLevel(log.DebugLevel)
 
