@@ -571,7 +571,7 @@ func (c *Config) parseProgram(cfg *ini.Ini) []string {
 			}
 			procName, err := section.GetValue("process_name")
 			if numProcs > 1 {
-				if err != nil || strings.Index(procName, "%(process_num)") == -1 {
+				if err != nil || !strings.Contains(procName, "%(process_num)") {
 					log.WithFields(log.Fields{
 						"numprocs":     numProcs,
 						"process_name": procName,

@@ -13,9 +13,9 @@ import (
 func setUserID(procAttr *syscall.SysProcAttr, uid uint32, gid uint32) {
 	u, err := user.Current()
 	if err == nil {
-		cuid, uid_err := strconv.ParseUint(u.Uid, 10, 32)
-		cgid, gid_err := strconv.ParseUint(u.Gid, 10, 32)
-		if uid_err == nil && gid_err == nil && uint32(cuid) == uid && uint32(cgid) == gid {
+		cuid, uidErr := strconv.ParseUint(u.Uid, 10, 32)
+		cgid, gidErr := strconv.ParseUint(u.Gid, 10, 32)
+		if uidErr == nil && gidErr == nil && uint32(cuid) == uid && uint32(cgid) == gid {
 			log.Info("no need to switch user")
 			return
 		}

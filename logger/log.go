@@ -54,9 +54,7 @@ type NullLogger struct {
 type NullLocker struct{}
 
 // ChanLogger write log message by channel
-type ChanLogger struct {
-	channel chan []byte
-}
+type ChanLogger struct{}
 
 // CompositeLogger dispatch the log message to other loggers
 type CompositeLogger struct {
@@ -494,8 +492,6 @@ func (se *StdLogEventEmitter) emitLogEvent(data string) {
 // BackgroundWriteCloser write data in background
 type BackgroundWriteCloser struct {
 	io.WriteCloser
-	logChannel  chan []byte
-	writeCloser io.WriteCloser
 }
 
 // NewCompositeLogger creates new CompositeLogger object (pool of loggers)

@@ -434,14 +434,14 @@ func (p *Process) setProgramRestartChangeMonitor(programPath string) {
 		}
 		AddProgramChangeMonitor(absPath, func(path string, mode filechangemonitor.FileChangeMode) {
 			log.WithFields(log.Fields{"program": p.GetName()}).Info("program is changed, restart it")
-			restart_cmd := p.config.GetString("restart_cmd_when_binary_changed", "")
+			restartCmd := p.config.GetString("restartCmd_when_binary_changed", "")
 			s := p.config.GetString("restart_signal_when_binary_changed", "")
-			if len(restart_cmd) > 0 {
-				_, err := executeCommand(restart_cmd)
+			if len(restartCmd) > 0 {
+				_, err := executeCommand(restartCmd)
 				if err == nil {
-					log.WithFields(log.Fields{"program": p.GetName(), "command": restart_cmd}).Info("restart program with command successfully")
+					log.WithFields(log.Fields{"program": p.GetName(), "command": restartCmd}).Info("restart program with command successfully")
 				} else {
-					log.WithFields(log.Fields{"program": p.GetName(), "command": restart_cmd, "error": err}).Info("fail to restart program")
+					log.WithFields(log.Fields{"program": p.GetName(), "command": restartCmd, "error": err}).Info("fail to restart program")
 				}
 			} else if len(s) > 0 {
 				p.sendSignals(strings.Fields(s), true)
@@ -460,14 +460,14 @@ func (p *Process) setProgramRestartChangeMonitor(programPath string) {
 		}
 		AddConfigChangeMonitor(absDir, filePattern, func(path string, mode filechangemonitor.FileChangeMode) {
 			log.WithFields(log.Fields{"program": p.GetName()}).Info("configure file for program is changed, restart it")
-			restart_cmd := p.config.GetString("restart_cmd_when_file_changed", "")
+			restartCmd := p.config.GetString("restartCmd_when_file_changed", "")
 			s := p.config.GetString("restart_signal_when_file_changed", "")
-			if len(restart_cmd) > 0 {
-				_, err := executeCommand(restart_cmd)
+			if len(restartCmd) > 0 {
+				_, err := executeCommand(restartCmd)
 				if err == nil {
-					log.WithFields(log.Fields{"program": p.GetName(), "command": restart_cmd}).Info("restart program with command successfully")
+					log.WithFields(log.Fields{"program": p.GetName(), "command": restartCmd}).Info("restart program with command successfully")
 				} else {
-					log.WithFields(log.Fields{"program": p.GetName(), "command": restart_cmd, "error": err}).Info("fail to restart program")
+					log.WithFields(log.Fields{"program": p.GetName(), "command": restartCmd, "error": err}).Info("fail to restart program")
 				}
 			} else if len(s) > 0 {
 				p.sendSignals(strings.Fields(s), true)
@@ -848,18 +848,18 @@ func (p *Process) createStdoutLogger() logger.Logger {
 	backups := p.config.GetInt("stdout_logfile_backups", 10)
 	logEventEmitter := p.createStdoutLogEventEmitter()
 	props := make(map[string]string)
-	syslog_facility := p.config.GetString("syslog_facility", "")
-	syslog_tag := p.config.GetString("syslog_tag", "")
-	syslog_priority := p.config.GetString("syslog_stdout_priority", "")
+	syslogFacility := p.config.GetString("syslog_facility", "")
+	syslogTag := p.config.GetString("syslog_tag", "")
+	syslogPriority := p.config.GetString("syslog_stdout_priority", "")
 
-	if len(syslog_facility) > 0 {
-		props["syslog_facility"] = syslog_facility
+	if len(syslogFacility) > 0 {
+		props["syslog_facility"] = syslogFacility
 	}
-	if len(syslog_tag) > 0 {
-		props["syslog_tag"] = syslog_tag
+	if len(syslogTag) > 0 {
+		props["syslog_tag"] = syslogTag
 	}
-	if len(syslog_priority) > 0 {
-		props["syslog_priority"] = syslog_priority
+	if len(syslogPriority) > 0 {
+		props["syslog_priority"] = syslogPriority
 	}
 
 	return logger.NewLogger(p.GetName(), logFile, logger.NewNullLocker(), maxBytes, backups, props, logEventEmitter)
@@ -871,18 +871,18 @@ func (p *Process) createStderrLogger() logger.Logger {
 	backups := p.config.GetInt("stderr_logfile_backups", 10)
 	logEventEmitter := p.createStderrLogEventEmitter()
 	props := make(map[string]string)
-	syslog_facility := p.config.GetString("syslog_facility", "")
-	syslog_tag := p.config.GetString("syslog_tag", "")
-	syslog_priority := p.config.GetString("syslog_stderr_priority", "")
+	syslogFacility := p.config.GetString("syslog_facility", "")
+	syslogTag := p.config.GetString("syslog_tag", "")
+	syslogPriority := p.config.GetString("syslog_stderr_priority", "")
 
-	if len(syslog_facility) > 0 {
-		props["syslog_facility"] = syslog_facility
+	if len(syslogFacility) > 0 {
+		props["syslog_facility"] = syslogFacility
 	}
-	if len(syslog_tag) > 0 {
-		props["syslog_tag"] = syslog_tag
+	if len(syslogTag) > 0 {
+		props["syslog_tag"] = syslogTag
 	}
-	if len(syslog_priority) > 0 {
-		props["syslog_priority"] = syslog_priority
+	if len(syslogPriority) > 0 {
+		props["syslog_priority"] = syslogPriority
 	}
 
 	return logger.NewLogger(p.GetName(), logFile, logger.NewNullLocker(), maxBytes, backups, props, logEventEmitter)

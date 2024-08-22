@@ -373,8 +373,6 @@ func (em *EventListenerManager) EmitEvent(event Event) {
 // RemoteCommunicationEvent remote communication event definition
 type RemoteCommunicationEvent struct {
 	BaseEvent
-	typ  string
-	data string
 }
 
 // ProcCommEvent process communication event definition
@@ -779,5 +777,4 @@ func CreateProcessLogStderrEvent(processName string,
 // ProcessGroupEvent the process group event definition
 type ProcessGroupEvent struct {
 	BaseEvent
-	groupName string
 }
