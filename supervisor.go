@@ -53,16 +53,16 @@ type RemoteCommEvent struct {
 
 // StateInfo describe the state of supervisor
 type StateInfo struct {
-	Statecode int    `xml:"statecode"`
 	Statename string `xml:"statename"`
+	Statecode int    `xml:"statecode"`
 }
 
 // RPCTaskResult result of some remote commands
 type RPCTaskResult struct {
 	Name        string `xml:"name"`        // the program name
 	Group       string `xml:"group"`       // the group of the program
-	Status      int    `xml:"status"`      // the status of the program
 	Description string `xml:"description"` // the description of program
+	Status      int    `xml:"status"`      // the status of the program
 }
 
 // LogReadInfo the input argument to read the log of supervisor

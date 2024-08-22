@@ -25,9 +25,9 @@ type XMLRPC struct {
 }
 
 type httpBasicAuth struct {
+	handler  http.Handler
 	user     string
 	password string
-	handler  http.Handler
 }
 
 // create a new HttpBasicAuth object with username, password and the http request handler
