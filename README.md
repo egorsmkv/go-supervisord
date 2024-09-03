@@ -8,6 +8,8 @@ go build -race -o supervisord .
 
 ```
 go build -ldflags="-s -w" -o supervisord .
+
+CGO_ENABLED=0 go build -ldflags="-s -w" -o supervisord .
 ```
 
 # lint
